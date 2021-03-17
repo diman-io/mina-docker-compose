@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  daemon:
+    image: minaprotocol/mina-daemon-baked:1.1.3-48401e9
+    restart: always
+    command: >
+      daemon
+        --block-producer-key /root/keys/diman-blockproducer-key
+        --block-producer-password PASSWORD
+        --coinbase-receiver B62yourCOINBASEreceiverWALLETaddress
+        --insecure-rest-server
+        --file-log-level Debug
+        --log-level Info
+        --archive-address archive:3086
+        --open-limited-graphql-port
+        --limited-graphql-port 3095
+        --peer-list-url https://storage.googleapis.com/mina-seed-lists/mainnet_seeds.txt
+    ports:
+      - "8302:8302"
+    volumes:
+      - ./keys:/root/keys
+      - ./minadata:/root/.mina-config
+  sidecar:
+    image: minaprotocol/mina-bp-stats-sidecar:latest
+    restart: always
+    environment:
+      - MINA_BP_UPLOAD_URL=https://us-central1-mina-mainnet-303900.cloudfunctions.net/block-producer-stats-ingest/?token=72941420a9595e1f4006e2f3565881b5
+      - MINA_NODE_URL=http://daemon:3095
+    depends_on:
+      - daemon
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./pginit:/docker-entrypoint-initdb.d
+  archive:
+    image: minaprotocol/mina-archive:1.1.3-48401e9
+    restart: always
+    command: >
+      run
+        -postgres-uri postgres://postgres:postgres@postgres:5432/mina
+        -server-port 3086
+    depends_on:
+      - daemon
+      - postgres
