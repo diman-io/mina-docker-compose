@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   daemon:
-    image: minaprotocol/mina-daemon-baked:1.1.3-48401e9
+    image: minaprotocol/mina-daemon-baked:1.1.5-a42bdee
     restart: always
     command: >
       daemon
@@ -37,10 +37,10 @@ services:
       - ./pgdata:/var/lib/postgresql/data
       - ./pginit:/docker-entrypoint-initdb.d
   archive:
-    image: minaprotocol/mina-archive:1.1.3-48401e9
+    image: minaprotocol/mina-archive:1.1.5-a42bdee
     restart: always
     command: >
-      run
+      coda-archive run
         -postgres-uri postgres://postgres:postgres@postgres:5432/mina
         -server-port 3086
     depends_on:
